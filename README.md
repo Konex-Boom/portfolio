@@ -1,20 +1,47 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# KONEX DEV — Portfolio
 
-# Run and deploy your AI Studio app
+Site portfolio personnel de **Daniel Khonné** (KONEX DEV), Développeur Web Full-Stack basé à Antananarivo, Madagascar.
 
-This contains everything you need to run your app locally.
+## Stack
 
-View your app in AI Studio: https://ai.studio/apps/84347175-6e48-427f-92f2-d3e092c614b6
+- React 19 + TypeScript
+- Tailwind CSS v4
+- Vite
+- Three.js / React Three Fiber (modèle 3D)
+- Motion (animations)
+- Lucide React (icônes)
 
-## Run Locally
+## Lancer en local
 
-**Prerequisites:**  Node.js
+```bash
+npm install
+npm run dev
+```
 
+Le site sera disponible sur `http://localhost:3000`.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Déployer
+
+```bash
+npm run build
+```
+
+Déploiement Vercel : [konexdev-portfolio.vercel.app](https://konexdev-portfolio.vercel.app)
+
+## Structure
+
+```
+src/
+├── components/     # Composants React (Hero, TechArsenal, Projects, etc.)
+├── context/        # ThemeContext (dark/light)
+├── data/           # Données portfolio (projets, compétences, profil)
+├── assets/images/  # Images et screenshots
+├── lib/            # Utilitaires
+├── types.ts        # Types TypeScript
+└── App.tsx         # Point d'entrée principal
+```
+
+## Contact
+
+- GitHub: [Konex-Boom](https://github.com/Konex-Boom)
+- LinkedIn: [Daniel Khonné](https://www.linkedin.com/in/mamy-koné-a56262406)
