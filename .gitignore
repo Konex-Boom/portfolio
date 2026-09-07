@@ -1,0 +1,23 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+.vercel
+*.cjs
+convert-hero.mjs
+convert-screenshots.mjs
+postbuild.mjs
+throttle.cjs
+dbg.cjs
+dbg.js
+The MODEL 2.glb
+public/modela.glb
+src/assets/images/hero_konex.png
+src/assets/images/lunahygiene_cap3.jpg
+src/assets/images/sakafomarket_cap2.png
+src/assets/images/sakafomarket_cap5.png

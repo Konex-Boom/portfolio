@@ -1,0 +1,190 @@
+========================================================
+        PORTEFEUILLE / DESCRIPTION — DANIEL KHONNÉ
+        Développeur Web & Full-Stack
+========================================================
+
+IDENTITÉ
+--------
+Nom complet    : TOLONJANAHARY MAMY Urside Daniel Khonné
+Alias          : KONEX DEV
+Localisation   : Madagascar
+Disponibilité  : Full Remote — Monde Entier
+Email          : konexdrack601@gmail.com
+Téléphone      : +261 34 00 000 00
+GitHub         : github.com/Konex-Boom
+LinkedIn       : linkedin.com/in/konexdev
+Portfolio      : konexdev.app
+
+--------------------------------------------------------
+PRÉSENTATION
+--------------------------------------------------------
+
+Développeur Web Full-Stack basé à Madagascar, passionné
+par l'architecture logicielle, les interfaces utilisateur
+réactives et les technologies web modernes. Je combine une
+rigueur d'ingénierie backend avec une sensibilité créative
+frontend pour livrer des produits numériques robustes,
+performants et intuitifs.
+
+Fort de plus de 3 années d'expérience et de plus de 20
+projets livrés avec succès, j'accompagne startups et
+entreprises ambitieuses dans la conception et la mise en
+production de solutions digitales pérennes à fort impact.
+
+--------------------------------------------------------
+SPÉCIALITÉS TECHNIQUES
+--------------------------------------------------------
+
+  Frontend        : React, TypeScript, Next.js, Vue.js,
+                    Tailwind CSS, Framer Motion
+
+  Backend         : Node.js, Express, PHP, Laravel
+
+  Bases de données : PostgreSQL, MySQL, MongoDB
+
+  Outils & DevOps : Git, Docker, CI/CD, Vite, Linux
+
+  Langages        : JavaScript, TypeScript, Python, Java,
+                    C++, PHP, SQL
+
+  IA & Avancé     : Intégration d'APIs IA (GPT, Gemini),
+                    WebGL, APIs REST & GraphQL
+
+  Mobile          : Android (Java/Kotlin)
+
+  Design          : UI/UX, Figma, Design Systems,
+                    Responsive Design
+
+  Méthodologie    : Agile / Scrum, Clean Code, GitFlow
+
+--------------------------------------------------------
+EXPÉRIENCE PROFESSIONNELLE
+--------------------------------------------------------
+
+2023 — Présent | KONEX DEV Studio
+  Développeur Web & Full-Stack Indépendant (Freelance)
+  - Conception et développement d'applications web
+    complètes, de dashboards SaaS et de plateformes
+    sur-mesure pour des clients internationaux.
+  - Mise en place d'architectures scalables sous React,
+    Node.js, Express, Laravel et PostgreSQL.
+  - Optimisation poussée des performances web
+    (Core Web Vitals, SEO, accessibilité, temps de
+    réponse API).
+  - Intégration d'APIs tierces sécurisées (Stripe,
+    OpenAI, WebSockets, services Cloud).
+
+2022 — 2023 | Digital Solutions Agency
+  Développeur Frontend & Intégrateur Web
+  - Création de composants UI réutilisables et mise en
+    place de design systems cohérents.
+  - Collaboration étroite avec les designers UI/UX et
+    les développeurs backend.
+  - Amélioration des temps de chargement des pages de
+    40% grâce au code splitting et lazy loading.
+
+2021 — 2022 | Projets Académiques
+  - Application de gestion de base de données
+    relationnelle avec interface graphique.
+  - Implémentation d'algorithmes de tri et de recherche
+    optimisés en C++ et Python.
+  - Système web de gestion d'étudiants en PHP et MySQL.
+
+--------------------------------------------------------
+FORMATION
+--------------------------------------------------------
+
+2021 — 2024 | Licence 3 Informatique
+  Université / Faculté des Sciences — Madagascar
+  Génie Logiciel, Algorithmique Avancée, Bases de
+  Données Relationnelles, Programmation Orientée Objet
+  (Java, C++, C#, PHP), Systèmes d'Exploitation Linux.
+
+2022 — 2024 | Développeur Web & Full-Stack
+  Formation Continue & Spécialisation Professionnelle
+  Architecture Full-Stack, React & State Management,
+  Backend sécurisé, Bonnes pratiques OWASP, CI/CD.
+
+--------------------------------------------------------
+PROJETS SÉLECTIONNÉS
+--------------------------------------------------------
+
+1. Gestion des Congés (JIRAMA)
+   Application web de gestion des demandes de congés du
+   personnel. Workflow d'approbation, notifications,
+   tableau de bord RH.
+   Technologies : ReactJS, Laravel
+
+2. Application de Gestion de Restaurant
+   Gestion des commandes, réservations de tables et
+   facturation. Suivi des ventes et rapports d'activité.
+   Technologies : PHP, MySQL, ReactJS
+
+3. Gestion des Colis (Coopérative)
+   Application de gestion des expéditions : itinéraires,
+   véhicules, transporteurs, calcul des frais de
+   transport et suivi des livraisons.
+   Technologie : Java
+
+4. Ventes & Approvisionnements
+   Application desktop de gestion des ventes, stocks et
+   approvisionnements. Suivi des mouvements de stock et
+   rapports de gestion.
+   Technologies : C++, Qt
+
+5. Maths-Tools
+   Boîte à outils mathématique interactive : algèbre,
+   arithmétique, calculatrice scientifique, statistiques,
+   conversions.
+   Technologies : React 18, TypeScript, Vite, Tailwind CSS
+   Lien : github.com/Konex-Boom/Maths-Tools
+
+6. Konex CV Builder
+   Créateur de CV professionnels avec 22 templates,
+   aperçu A4 en temps réel et export PDF.
+   Technologies : React 19, Redux Toolkit, MUI v6,
+                  Framer Motion, Vite
+   Lien : github.com/Konex-Boom/konex-cv-builder
+   Démo : cv-builder-pro-liard.vercel.app
+
+--------------------------------------------------------
+LANGUES
+--------------------------------------------------------
+
+  Malagasy  — Langue maternelle
+  Français  — Courant / Bilingue
+  Anglais   — Technique & Professionnel
+
+--------------------------------------------------------
+PHILOSOPOPHIE DE TRAVAIL
+--------------------------------------------------------
+
+Mon approche repose sur trois piliers fondamentaux :
+
+  1. QUALITÉ DU CODE
+     Code propre, typage strict, architecture modulaire
+     et maintenance à long terme. Chaque ligne de code
+     doit avoir un sens et être compréhensible par
+     l'équipe.
+
+  2. EXPÉRIENCE UTILISATEUR
+     Une interface n'est jamais qu'un écran. Elle est le
+     pont entre un besoin métier et une solution concrète.
+     Fluidité, accessibilité et esthétique ne sont pas
+     des options — ce sont des exigences.
+
+  3. PERFORMANCE & FIABILITÉ
+     Temps de réponse optimaux, disponibilité maximale,
+     sécurité intégrée dès la conception. Un produit qui
+     ralentit est un produit qui perd ses utilisateurs.
+
+--------------------------------------------------------
+CONTACT
+--------------------------------------------------------
+
+Email     : konexdrack601@gmail.com
+GitHub    : github.com/Konex-Boom
+LinkedIn  : linkedin.com/in/konexdev
+Portfolio : konexdev.app
+
+========================================================
