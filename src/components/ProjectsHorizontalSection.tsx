@@ -7,6 +7,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { projectsData } from '../data/konexData';
+import { projectThumbnails } from '../data/projectThumbnails';
 import { ProjectItem } from '../types';
 import { useTheme } from '../context/ThemeContext';
 
@@ -101,7 +102,13 @@ export const ProjectsHorizontalSection: React.FC<ProjectsHorizontalSectionProps>
               {/* Image */}
               <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-950">
                 <img
-                  src={project.image}
+                  src={projectThumbnails[project.image]?.src ?? project.image}
+                  srcSet={projectThumbnails[project.image]?.srcSet}
+                  sizes="(min-width: 1280px) 374px, (min-width: 1024px) calc((100vw - 152px) / 3), (min-width: 768px) calc((100vw - 92px) / 2), (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
+                  loading="lazy"
+                  decoding="async"
+                  width={960}
+                  height={600}
                   alt={project.title}
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"

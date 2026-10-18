@@ -6,9 +6,10 @@ import {
   useTransform,
   useMotionValue,
   useVelocity,
-  useAnimationFrame,
+  useReducedMotion,
 } from 'motion/react';
 import './ScrollVelocity.css';
+import { useElementVisibility } from '../hooks/useElementVisibility';
 
 function useElementWidth(ref: React.RefObject<HTMLElement | null>) {
   const [width, setWidth] = useState(0);
@@ -19,9 +20,10 @@ function useElementWidth(ref: React.RefObject<HTMLElement | null>) {
         setWidth(ref.current.offsetWidth);
       }
     }
+    const observer = new ResizeObserver(updateWidth);
+    if (ref.current) observer.observe(ref.current);
     updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
+    return () => observer.disconnect();
   }, [ref]);
 
   return width;
@@ -106,36 +108,33 @@ function VelocityText({
 
   const directionFactor = useRef(1);
   const sectionRef = useRef<HTMLDivElement>(null);
-  const isVisibleRef = useRef(true);
+  const { isVisible } = useElementVisibility(sectionRef);
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    const el = sectionRef.current;
-    if (!el || typeof IntersectionObserver === 'undefined') return;
-    const obs = new IntersectionObserver(
-      ([entry]) => { isVisibleRef.current = entry.isIntersecting; },
-      { threshold: 0 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
+    if (!isVisible || reducedMotion) return;
+    let frame = 0;
+    let lastTime = 0;
+    const animate = (time: number) => {
+      const delta = lastTime ? Math.min(time - lastTime, 64) : 0;
+      lastTime = time;
+      let moveBy = directionFactor.current * baseVelocity * (delta / 1000);
 
-  useAnimationFrame((_, delta) => {
-    if (!isVisibleRef.current) return;
-
-    let moveBy = directionFactor.current * baseVelocity * (delta / 1000);
-
-    if (!disableScroll) {
-      if (velocityFactor.get() < 0) {
-        directionFactor.current = -1;
-      } else if (velocityFactor.get() > 0) {
-        directionFactor.current = 1;
+      if (!disableScroll) {
+        if (velocityFactor.get() < 0) {
+          directionFactor.current = -1;
+        } else if (velocityFactor.get() > 0) {
+          directionFactor.current = 1;
+        }
+        moveBy += directionFactor.current * moveBy * velocityFactor.get();
       }
 
-      moveBy += directionFactor.current * moveBy * velocityFactor.get();
-    }
-
-    baseX.set(baseX.get() + moveBy);
-  });
+      baseX.set(baseX.get() + moveBy);
+      frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [isVisible, reducedMotion, baseVelocity, disableScroll, velocityFactor, baseX]);
 
   const spans = [];
   for (let i = 0; i < numCopies; i++) {

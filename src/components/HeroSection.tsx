@@ -20,14 +20,15 @@ import { ParticleText } from './ParticleText';
 import { useTheme } from '../context/ThemeContext';
 import { ErrorBoundary } from './ErrorBoundary';
 
+const DARK_COLORS = ['#00f2fe', '#38bdf8', '#6366f1', '#a855f7'];
+const LIGHT_COLORS = ['#ff8a00', '#ff5500', '#fb923c', '#f59e0b'];
+
 interface HeroSectionProps {
-  scrollProgress: number;
   onNavigate: (sectionId: string) => void;
   onOpenCV: () => void;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
-  scrollProgress,
   onNavigate,
   onOpenCV,
 }) => {
@@ -46,11 +47,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <div className="absolute inset-0 opacity-60">
           <ErrorBoundary>
             <Lightfall
-            colors={
-              isDark
-                ? ['#00f2fe', '#38bdf8', '#6366f1', '#a855f7']
-                : ['#ff8a00', '#ff5500', '#fb923c', '#f59e0b']
-            }
+            colors={isDark ? DARK_COLORS : LIGHT_COLORS}
             backgroundColor={isDark ? '#070b13' : '#f4f3f0'}
             speed={0.45}
             streakCount={4}
@@ -376,6 +373,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <img
                   src={portfolioImages.heroPortrait}
                   alt="KONEX DEV Avatar Portrait"
+                  fetchPriority="high"
+                  width={1254}
+                  height={1254}
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover object-top filter contrast-[1.08] brightness-[0.98]"
                 />

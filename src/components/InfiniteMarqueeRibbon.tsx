@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import { useReducedMotion } from 'motion/react';
+import { useElementVisibility } from '../hooks/useElementVisibility';
 import { useTheme } from '../context/ThemeContext';
 import { Sparkles, Terminal } from 'lucide-react';
 
@@ -19,9 +21,13 @@ const marqueeItems = [
 
 export const InfiniteMarqueeRibbon: React.FC = () => {
   const { isDark } = useTheme();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { isVisible } = useElementVisibility(containerRef);
+  const reducedMotion = useReducedMotion();
 
   return (
     <div
+      ref={containerRef}
       className={`relative w-full overflow-hidden py-3 sm:py-3.5 border-y select-none transition-colors duration-300 ${
         isDark
           ? 'bg-[#080d1a]/95 border-cyan-500/20 text-slate-200 shadow-[0_0_25px_rgba(0,242,254,0.05)]'
@@ -45,7 +51,7 @@ export const InfiniteMarqueeRibbon: React.FC = () => {
       />
 
       {/* Infinite Continuous Ticker Track (Double Array for True Loop) */}
-      <div className="animate-infinite-marquee flex items-center gap-6 sm:gap-8">
+      <div className="animate-infinite-marquee flex items-center gap-6 sm:gap-8" style={{ animationPlayState: isVisible && !reducedMotion ? 'running' : 'paused' }}>
         {[...marqueeItems, ...marqueeItems].map((item, index) => (
           <div
             key={`${item.name}-${index}`}

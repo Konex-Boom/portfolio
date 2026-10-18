@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 import { MapPin, Target, Code2, Sparkles, CheckCircle2, Terminal } from 'lucide-react';
 import { aboutData } from '../data/konexData';
 import { useTheme } from '../context/ThemeContext';
 import { ErrorBoundary } from './ErrorBoundary';
+import { useElementVisibility } from '../hooks/useElementVisibility';
 
 const ModelViewer = React.lazy(() => import('./ModelViewer').then(m => ({ default: m.ModelViewer })));
 
@@ -13,6 +14,8 @@ interface AboutSectionProps {
 
 export const AboutSection: React.FC<AboutSectionProps> = ({ onNavigate }) => {
   const { isDark } = useTheme();
+  const modelRef = useRef<HTMLDivElement>(null);
+  const { hasBeenVisible } = useElementVisibility(modelRef, '250px');
 
   return (
     <section
@@ -108,12 +111,12 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onNavigate }) => {
             </div>
 
             {/* Interactive 3D Model */}
-            <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-950">
+            <div ref={modelRef} className="relative aspect-[4/3] w-full overflow-hidden bg-slate-950">
               <React.Suspense fallback={<div className="absolute inset-0 flex items-center justify-center bg-slate-950">
                 <span className={`font-mono-code text-xs ${isDark ? 'text-cyan-400' : 'text-[#ff5500]'}`}>CHARGEMENT 3D ...</span>
               </div>}>
                 <ErrorBoundary>
-                  <ModelViewer className="absolute inset-0 w-full h-full" />
+                  {hasBeenVisible && <ModelViewer className="absolute inset-0 w-full h-full" />}
                 </ErrorBoundary>
               </React.Suspense>
               <div

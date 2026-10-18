@@ -17,23 +17,24 @@ export default defineConfig(() => {
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {
-              if (id.includes('three') || id.includes('@react-three')) {
-                return 'three';
-              }
               if (id.includes('motion') || id.includes('framer')) {
                 return 'motion';
               }
               if (id.includes('lucide-react')) {
                 return 'icons';
               }
-              return 'vendor';
+              // Leave 3D-only modules in the lazy ModelViewer graph. Forcing
+              // them into shared chunks can pull them into the entry bundle.
+              if (/\/node_modules\/(react|react-dom|scheduler)\//.test(id)) {
+                return 'vendor';
+              }
             }
           },
         },
       },
     },
     server: {
-hmr: process.env.DISABLE_HMR !== 'true',
+      hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
   };

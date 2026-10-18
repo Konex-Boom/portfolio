@@ -28,6 +28,31 @@ npm run build
 
 Déploiement Vercel : [konexdev-portfolio.vercel.app](https://konexdev-portfolio.vercel.app)
 
+Pour publier depuis Windows avec la CLI Vercel connectée au projet :
+
+```bash
+npm run build:vercel
+vercel deploy --prebuilt --prod
+```
+
+Cette commande prépare les fichiers statiques au format [Build Output API de Vercel](https://vercel.com/docs/build-output-api/primitives#static-files), sans passer par le lancement de commande défaillant de `vercel build` sous Windows.
+
+## Vérifier les performances
+
+```bash
+npm run lint
+npm run build
+npm run test:performance
+```
+
+Le test ouvre un navigateur de test sur la construction locale, en formats ordinateur et mobile. Il vérifie le chargement différé de la 3D, l'arrêt des effets hors écran, leur reprise, les thèmes, les images et la navigation. Les captures et mesures sont enregistrées dans le dossier temporaire indiqué à la fin. Edge/Chrome est détecté automatiquement ; `PERFORMANCE_BROWSER` permet de choisir un autre exécutable Chromium.
+
+Après remplacement d'une couverture de projet, régénérer ses versions adaptées aux cartes :
+
+```bash
+node scripts/optimize-project-covers.mjs
+```
+
 ## Structure
 
 ```

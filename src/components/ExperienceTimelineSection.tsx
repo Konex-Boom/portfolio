@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Calendar, MapPin, CheckCircle2, Briefcase, Sparkles, Building2 } from 'lucide-react';
 import { experienceData } from '../data/konexData';
 import { useTheme } from '../context/ThemeContext';
+import { observeVisibility } from '../lib/visibility';
 
 const lerp = (start: number, end: number, t: number) => start + (end - start) * t;
 const clamp = (val: number, min = 0, max = 1) => Math.min(max, Math.max(min, val));
@@ -39,27 +40,35 @@ export const ExperienceTimelineSection: React.FC = () => {
       return clamp(distFromTrigger / 200, 0, 1);
     });
 
-    setNodeProgresses(progresses);
+    setNodeProgresses(previous => previous.every((value, index) => value === progresses[index]) ? previous : progresses);
   }, []);
 
   useEffect(() => {
-    let animFrame: number;
+    let animFrame = 0;
+    let active = false;
 
     const onScroll = () => {
-      cancelAnimationFrame(animFrame);
-      animFrame = requestAnimationFrame(handleScroll);
+      if (active && !animFrame) animFrame = requestAnimationFrame(() => {
+        animFrame = 0;
+        handleScroll();
+      });
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
-    handleScroll();
-
-    const timer1 = setTimeout(handleScroll, 100);
-    const timer2 = setTimeout(handleScroll, 400);
+    window.addEventListener('resize', onScroll, { passive: true });
+    const stopObserving = observeVisibility(sectionRef.current!, visible => {
+      active = visible;
+      if (active) onScroll();
+      else {
+        cancelAnimationFrame(animFrame);
+        animFrame = 0;
+      }
+    }, '100px');
 
     return () => {
       window.removeEventListener('scroll', onScroll);
-      clearTimeout(timer1);
-      clearTimeout(timer2);
+      window.removeEventListener('resize', onScroll);
+      stopObserving();
       cancelAnimationFrame(animFrame);
     };
   }, [handleScroll]);

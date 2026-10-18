@@ -3,77 +3,81 @@ import { useTheme } from '../context/ThemeContext';
 
 export const CustomCursor: React.FC = () => {
   const { isDark } = useTheme();
-  const [position, setPosition] = useState({ x: -100, y: -100 });
   const [isHovered, setIsHovered] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(() => window.matchMedia('(hover: none), (pointer: coarse)').matches);
+  const dotRef = useRef<HTMLDivElement>(null);
+  const followerElementRef = useRef<HTMLDivElement>(null);
   const followerRef = useRef({ x: -100, y: -100 });
   const posRef = useRef({ x: -100, y: -100 });
 
   useEffect(() => {
-    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-      setIsTouchDevice(true);
-      return;
-    }
+    const query = window.matchMedia('(hover: none), (pointer: coarse)');
+    const update = () => setIsTouchDevice(query.matches);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
   }, []);
 
   useEffect(() => {
     if (isTouchDevice) return;
-
-    let animationFrameId: number;
-    const followerEl = document.getElementById('cursor-follower');
-
-    const handleMouseMove = (e: MouseEvent) => {
-      posRef.current.x = e.clientX;
-      posRef.current.y = e.clientY;
-      setPosition({ x: e.clientX, y: e.clientY });
-      if (!isVisible) setIsVisible(true);
-    };
-
-    const handleMouseOver = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const isInteractive =
-        target.tagName === 'BUTTON' ||
-        target.tagName === 'A' ||
-        !!target.closest('button,a,.cursor-pointer') ||
-        target.getAttribute('role') === 'button';
-      setIsHovered(isInteractive);
-    };
-
-    const handleMouseLeave = () => setIsVisible(false);
-
+    let frame = 0;
+    let visible = false;
     const follow = () => {
-      const fx = followerRef.current;
-      const px = posRef.current;
-      fx.x += (px.x - fx.x) * 0.18;
-      fx.y += (px.y - fx.y) * 0.18;
-      if (followerEl) {
-        followerEl.style.transform = `translate3d(${fx.x}px, ${fx.y}px, 0)`;
-      }
-      animationFrameId = requestAnimationFrame(follow);
+      frame = 0;
+      const target = posRef.current;
+      const follower = followerRef.current;
+      follower.x += (target.x - follower.x) * 0.18;
+      follower.y += (target.y - follower.y) * 0.18;
+      if (dotRef.current) dotRef.current.style.transform = 'translate3d(' + target.x + 'px,' + target.y + 'px,0)';
+      if (followerElementRef.current) followerElementRef.current.style.transform = 'translate3d(' + follower.x + 'px,' + follower.y + 'px,0)';
+      if (visible && Math.hypot(target.x - follower.x, target.y - follower.y) > 0.1) frame = requestAnimationFrame(follow);
     };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseleave', handleMouseLeave);
-    window.addEventListener('mouseover', handleMouseOver);
-    animationFrameId = requestAnimationFrame(follow);
-
+    const hide = () => {
+      visible = false;
+      cancelAnimationFrame(frame);
+      frame = 0;
+      if (dotRef.current) dotRef.current.style.opacity = '0';
+      if (followerElementRef.current) followerElementRef.current.style.opacity = '0';
+    };
+    const handleMouseMove = (event: MouseEvent) => {
+      posRef.current = { x: event.clientX, y: event.clientY };
+      if (!visible) {
+        visible = true;
+        followerRef.current = { ...posRef.current };
+        if (dotRef.current) dotRef.current.style.opacity = '1';
+        if (followerElementRef.current) followerElementRef.current.style.opacity = '1';
+      }
+      if (!frame) frame = requestAnimationFrame(follow);
+    };
+    const handleMouseOver = (event: MouseEvent) => {
+      const target = event.target;
+      setIsHovered(target instanceof Element && !!target.closest('button,a,.cursor-pointer,[role="button"]'));
+    };
+    const handleVisibility = () => { if (document.hidden) hide(); };
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('mouseover', handleMouseOver, { passive: true });
+    window.addEventListener('blur', hide);
+    document.addEventListener('mouseleave', hide);
+    document.addEventListener('visibilitychange', handleVisibility);
     return () => {
-      cancelAnimationFrame(animationFrameId);
+      hide();
       window.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseleave', handleMouseLeave);
       window.removeEventListener('mouseover', handleMouseOver);
+      window.removeEventListener('blur', hide);
+      document.removeEventListener('mouseleave', hide);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [isTouchDevice]);
 
-  if (isTouchDevice || !isVisible) return null;
+  if (isTouchDevice) return null;
 
   return (
     <>
       <div
+        ref={dotRef}
         className="fixed top-0 left-0 pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 will-change-transform"
         style={{
-          transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
+          opacity: 0,
+          transform: 'translate3d(-100px, -100px, 0)',
         }}
       >
         <div
@@ -90,10 +94,12 @@ export const CustomCursor: React.FC = () => {
       </div>
 
       <div
+        ref={followerElementRef}
         id="cursor-follower"
         className="fixed top-0 left-0 pointer-events-none z-[9998] -translate-x-1/2 -translate-y-1/2 will-change-transform"
         style={{
-          transform: `translate3d(${followerRef.current.x}px, ${followerRef.current.y}px, 0)`,
+          opacity: 0,
+          transform: 'translate3d(-100px, -100px, 0)',
         }}
       >
         <div

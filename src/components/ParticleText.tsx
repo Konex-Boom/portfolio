@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import './ParticleText.css';
+import { observeVisibility } from '../lib/visibility';
 
 interface RgbColor {
   r: number;
@@ -140,6 +141,7 @@ export const ParticleText: React.FC<ParticleTextProps> = ({
     let width = 0;
     let height = 0;
     let dpr = 1;
+    let active = false;
 
     const pointer = {
       active: false,
@@ -193,6 +195,8 @@ export const ParticleText: React.FC<ParticleTextProps> = ({
     };
 
     const render = (now: number) => {
+      animationFrame = null;
+      if (!active) return;
       ctx.clearRect(0, 0, width, height);
 
       if (glow && !reducedMotion) {
@@ -266,11 +270,11 @@ export const ParticleText: React.FC<ParticleTextProps> = ({
         gathering = false;
       }
 
-      animationFrame = window.requestAnimationFrame(render);
+      if (!reducedMotion) animationFrame = window.requestAnimationFrame(render);
     };
 
     const ensureRenderLoop = () => {
-      if (animationFrame === null) {
+      if (active && animationFrame === null) {
         animationFrame = window.requestAnimationFrame(render);
       }
     };
@@ -481,11 +485,22 @@ export const ParticleText: React.FC<ParticleTextProps> = ({
     canvas.addEventListener('click', handleClick);
 
     const resizeObserver = new ResizeObserver(queueSample);
+    const stopObserving = observeVisibility(container, visible => {
+      active = visible;
+      if (active) ensureRenderLoop();
+      else {
+        if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+        pointer.active = false;
+      }
+    });
     resizeObserver.observe(container);
     sampleText();
 
     return () => {
       buildId += 1;
+      active = false;
+      stopObserving();
       resizeObserver.disconnect();
       reduceMotionQuery?.removeEventListener('change', handleReduceMotionChange);
       canvas.removeEventListener('pointerenter', handlePointerEnter);

@@ -1,6 +1,8 @@
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF, ContactShadows, Center } from '@react-three/drei';
+import { useReducedMotion } from 'motion/react';
+import { useElementVisibility } from '../hooks/useElementVisibility';
 
 function Model() {
   const { scene } = useGLTF('/model.glb');
@@ -11,27 +13,13 @@ function Model() {
   );
 }
 
-function isWebGL2Supported(): boolean {
-  try {
-    const canvas = document.createElement('canvas');
-    return (
-      !!window.WebGL2RenderingContext &&
-      !!canvas.getContext('webgl2', { failIfMajorPerformanceCaveat: false })
-    );
-  } catch {
-    return false;
-  }
-}
-
 export const ModelViewer = ({ className = '' }: { className?: string }) => {
   const [error, setError] = useState<boolean>(false);
-  const [webglOK, setWebglOK] = useState<boolean>(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { isVisible } = useElementVisibility(containerRef);
+  const reducedMotion = useReducedMotion();
 
-  useEffect(() => {
-    setWebglOK(isWebGL2Supported());
-  }, []);
-
-  if (error || !webglOK) {
+  if (error) {
     return (
       <div
         className={className}
@@ -53,6 +41,7 @@ export const ModelViewer = ({ className = '' }: { className?: string }) => {
 
   return (
     <div
+      ref={containerRef}
       className={className}
       style={{
         width: '100%',
@@ -61,11 +50,12 @@ export const ModelViewer = ({ className = '' }: { className?: string }) => {
       }}
     >
       <Canvas
+        frameloop={!isVisible ? 'never' : reducedMotion ? 'demand' : 'always'}
         camera={{
           position: [1.9, 1, 1.9],
           fov: 45,
         }}
-        dpr={[1, 2]}
+        dpr={[1, 1.5]}
         gl={{
           antialias: false,
           alpha: true,
@@ -89,6 +79,7 @@ export const ModelViewer = ({ className = '' }: { className?: string }) => {
         <Suspense fallback={null}>
           <Model />
           <ContactShadows
+            frames={1}
             position={[0, -8.5, 0]}
             opacity={0.4}
             scale={18}
@@ -102,7 +93,7 @@ export const ModelViewer = ({ className = '' }: { className?: string }) => {
           enablePan={false}
           enableZoom={true}
           enableRotate={true}
-          autoRotate={true}
+          autoRotate={isVisible && !reducedMotion}
           autoRotateSpeed={1.8}
           minDistance={2}
           maxDistance={10}
@@ -112,5 +103,3 @@ export const ModelViewer = ({ className = '' }: { className?: string }) => {
     </div>
   );
 };
-
-useGLTF.preload('/model.glb');
