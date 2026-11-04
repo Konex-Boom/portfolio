@@ -103,4 +103,31 @@ Résultats sur ordinateur et en émulation mobile (390 × 844, densité 3) : **2
 
 Le fond conserve un seul contexte pendant le défilement et les changements de thème. Après ouverture de la 3D, le total reste de deux contextes. Les compteurs de dessin WebGL et du titre en particules restent à zéro pendant la mesure hors écran.
 
-Ces corrections n'ont pas été déployées sur Vercel.
+## Complément du 19 octobre 2026 : animations visibles au repos
+
+Les premières corrections sont présentes sur le site en ligne. Le rapport PageSpeed fourni ensuite donne **44/100 sur mobile** et **58/100 sur ordinateur**. Il mesure respectivement **9 572 ms** et **9 761 ms** de Total Blocking Time, malgré un chargement désormais beaucoup plus léger. La vérification en production confirme que les effets s'arrêtent hors écran ; elle ne couvrait pas encore leur coût lorsqu'ils restent visibles au repos.
+
+La seconde correction porte sur ce cas :
+
+- Lightfall affiche le même shader mais se fige au repos. Le mouvement de souris le réactive brièvement, à 24 images par seconde maximum, avec un budget de 180 000 pixels. Les appareils tactiles conservent le fond statique. Les thèmes et redimensionnements actualisent le rendu.
+- Le titre configuré pour le survol apparaît directement assemblé. Les particules s'animent à l'interaction puis s'arrêtent une fois revenues à leur position. Leur halo est composé une seule fois par image, au lieu d'appliquer une ombre à chaque particule.
+- Le portrait est ramené à 672 × 672 pixels (19 838 octets, contre 56 794), préchargé dans le HTML et affiché sans délai d'animation d'entrée.
+
+Les tests de la seconde correction passent sur ordinateur et en émulation mobile : **zéro dessin WebGL et zéro image du titre pendant la mesure au repos**, retour au repos après interaction, navigation mobile, thèmes, images et affichage 3D fonctionnels, aucune erreur détectée. Les ressources initiales observées totalisent **220 262 octets** dans le test local. Cette vérification fonctionnelle ne constitue pas un nouveau score PageSpeed.
+
+Déploiement de cette seconde correction effectué le 19 octobre 2026 : `dpl_35t92bZ8c39jRKJYzhaXUpe6sAzU`, état Vercel `READY`, alias de production `https://konexdev-portfolio.vercel.app/`.
+
+### Nouveau rapport PageSpeed en production
+
+Rapport du 19 octobre 2026 à 16:02 UTC+3, Lighthouse 13.5.0 : [mobile](https://pagespeed.web.dev/analysis/https-konexdev-portfolio-vercel-app/l8ekbqqigb?form_factor=mobile), [ordinateur](https://pagespeed.web.dev/analysis/https-konexdev-portfolio-vercel-app/l8ekbqqigb?form_factor=desktop).
+
+| Mesure | Mobile avant | Mobile après | Ordinateur avant | Ordinateur après |
+| --- | ---: | ---: | ---: | ---: |
+| Performance | 44 | 82 | 58 | 89 |
+| Total Blocking Time | 9 570 ms | 210 ms | 9 760 ms | 240 ms |
+| Largest Contentful Paint | 4,0 s | 3,5 s | 1,1 s | 0,9 s |
+| Speed Index | 7,3 s | 3,0 s | 5,9 s | 1,2 s |
+
+Il s'agit d'une mesure de laboratoire, sans données d'utilisateurs réels disponibles. L'ancien rapport partait de l'URL HTTP redirigée vers HTTPS ; le nouveau utilise directement HTTPS. Les essais Lighthouse sur cet ordinateur ont signalé un processeur plus lent que prévu et donné des résultats instables ; les scores ci-dessus proviennent du service PageSpeed, pas de ces essais locaux.
+
+Les prochaines améliorations éventuelles concernent surtout le chargement initial mobile (FCP 3,0 s), le JavaScript inutilisé au démarrage et les ajustements de mise en page. Le principal blocage lié aux animations continues est corrigé.

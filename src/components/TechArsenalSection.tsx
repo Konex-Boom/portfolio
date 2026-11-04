@@ -1,48 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, useScroll, useTransform } from 'motion/react';
-import {
-  Layers,
-  Sparkles,
-  Atom,
-  FileCode2,
-  Layout,
-  Palette,
-  Server,
-  Cpu,
-  Database,
-  HardDrive,
-  Terminal,
-  Binary,
-  Coffee,
-  Code,
-  GitBranch,
-  Brain,
-  Users,
-  Globe,
-  Cloud,
-  Wrench,
-  BookOpen,
-  Smartphone,
-  CalendarCheck,
-  MessageSquare,
-  ShieldCheck,
-  Compass,
-} from 'lucide-react';
+import { Layers } from 'lucide-react';
 import { techSkillsData } from '../data/konexData';
 import { TechSkill } from '../types';
 import { useTheme } from '../context/ThemeContext';
 
-const ICON_MAP: Record<string, React.ComponentType<any>> = {
-  Atom, FileCode2, Layout, Palette, Layers, Server, Cpu, Database,
-  HardDrive, Terminal, Binary, Coffee, Code, Sparkles, GitBranch,
-  Brain, Users, Globe, Cloud, Wrench, BookOpen, Smartphone,
-  CalendarCheck, MessageSquare, ShieldCheck, Compass,
-};
-
-const getSkillIcon = (skill: TechSkill) => {
-  const Cmp = ICON_MAP[skill.icon] || Sparkles;
-  return <Cmp className="w-full h-full" style={{ color: skill.color }} />;
-};
+const LIGHT_LOGO_SURFACE = new Set(['mysql', 'java', 'laravel']);
 
 interface ResponsiveGridConfig {
   cols: number;
@@ -116,14 +79,25 @@ const TechCard: React.FC<TechCardProps> = React.memo(({
       onClick={() => onHover(isHovered ? null : skill)}
       className={`group absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-xl sm:rounded-2xl flex flex-col justify-between cursor-pointer select-none transition-all duration-300 ${
         gridConfig.isMobile ? 'w-[96px] min-w-[96px] h-[58px] p-1.5' : gridConfig.isTablet ? 'w-28 h-24 p-2' : 'w-38 h-32 p-3'
-      } ${isDark ? 'bg-[#0a0f1d]/95 text-white' : 'bg-white/95 text-zinc-900'}`}
+      } ${isDark ? 'border border-white bg-[#0a0f1d]/95 text-white' : 'bg-white/95 text-zinc-900'}`}
       style={{ x, y, rotate, scale: isHovered ? 1.08 : scale, zIndex: isHovered ? 99 : totalCards - index, boxShadow: cardShadow, willChange: 'transform' }}
     >
       <div className="flex items-center justify-between pointer-events-none relative z-10">
-        <div className={`rounded flex items-center justify-center border shrink-0 ${gridConfig.isMobile ? 'w-5 h-5 p-1' : 'w-7 h-7 p-1'}`}
-          style={{ backgroundColor: `${skill.color}18`, borderColor: `${skill.color}45` }}
+        <div className={`rounded flex items-center justify-center border shrink-0 ${gridConfig.isMobile ? 'w-6 h-6 p-0.5' : 'w-9 h-9 p-1.5'}`}
+          style={{ backgroundColor: isDark && LIGHT_LOGO_SURFACE.has(skill.id) ? '#e2e8f0' : `${skill.color}18`, borderColor: `${skill.color}45` }}
         >
-          {getSkillIcon(skill)}
+          <img
+            src={skill.logoUrl}
+            alt=""
+            aria-hidden="true"
+            data-tech-logo={skill.id}
+            width={24}
+            height={24}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            className={`w-full h-full object-contain ${isDark && skill.id === 'openai' ? 'invert' : ''}`}
+          />
         </div>
         <span className={`text-[8px] sm:text-[9px] font-mono-code font-bold ${isDark ? 'opacity-75 text-slate-300' : 'opacity-75 text-zinc-500'}`}>
           #{String(index + 1).padStart(2, '0')}
@@ -133,11 +107,6 @@ const TechCard: React.FC<TechCardProps> = React.memo(({
         <h4 className={`font-syne text-[10px] sm:text-xs font-bold truncate leading-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>
           {skill.name}
         </h4>
-        {!gridConfig.isMobile && (
-          <span className={`text-[9px] font-mono-code block truncate ${isDark ? 'text-slate-400' : 'text-zinc-500'}`}>
-            {skill.experienceYears}
-          </span>
-        )}
       </div>
       <div className={`flex items-center justify-between text-[7px] sm:text-[8px] font-mono-code uppercase border-t pt-0.5 border-current/10 ${isDark ? 'opacity-75 text-slate-300' : 'opacity-75 text-zinc-500'}`}>
         <span className="truncate">{skill.level}</span>
@@ -175,7 +144,7 @@ export const TechArsenalSection: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      id="competences"
+      id="tech-arsenal"
       className={`relative h-[250vh] sm:h-[280vh] w-full transition-colors duration-300 ${
         isDark ? 'bg-[#05070f]' : 'bg-[#f4f3f0]'
       }`}

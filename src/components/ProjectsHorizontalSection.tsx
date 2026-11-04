@@ -1,296 +1,189 @@
-import React from 'react';
-import {
-  ArrowUpRight,
-  Eye,
-  Github,
-  Download,
-  Layers,
-} from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ArrowLeft, ArrowRight, ArrowUpRight, Download, Github } from 'lucide-react';
 import { projectsData } from '../data/konexData';
 import { projectThumbnails } from '../data/projectThumbnails';
 import { ProjectItem } from '../types';
 import { useTheme } from '../context/ThemeContext';
+import './ProjectsHorizontalSection.css';
 
 interface ProjectsHorizontalSectionProps {
   onSelectProject: (project: ProjectItem) => void;
 }
 
-export const ProjectsHorizontalSection: React.FC<ProjectsHorizontalSectionProps> = ({
-  onSelectProject,
-}) => {
+type ProjectFilter = 'all' | 'web' | 'mobile';
+const filters: { id: ProjectFilter; label: string }[] = [
+  { id: 'all', label: 'Tous les projets' },
+  { id: 'web', label: 'Web' },
+  { id: 'mobile', label: 'Mobile' },
+];
+const bookColors = ['#913f2e', '#24546b', '#d5c8a9', '#284f43', '#b15b30', '#755267'];
+const matchesFilter = (project: ProjectItem, filter: ProjectFilter) =>
+  filter === 'all' || project.category.includes(filter === 'web' ? 'APPLICATION WEB' : 'APPLICATION MOBILE');
+
+export const ProjectsHorizontalSection: React.FC<ProjectsHorizontalSectionProps> = ({ onSelectProject }) => {
   const { isDark } = useTheme();
-  const total = projectsData.length;
+  const [filter, setFilter] = useState<ProjectFilter>('all');
+  const [activeId, setActiveId] = useState(projectsData[2]?.id ?? projectsData[0]?.id);
+  const shelfRef = useRef<HTMLDivElement>(null);
+  const booksRef = useRef(new Map<string, HTMLButtonElement>());
+  const pointerSelection = useRef(false);
+  const visibleProjects = projectsData.filter(project => matchesFilter(project, filter));
+  const activeProject = visibleProjects.find(project => project.id === activeId) ?? visibleProjects[0];
+  const activeIndex = visibleProjects.findIndex(project => project.id === activeProject?.id);
+
+  useEffect(() => {
+    if (!activeProject || !window.matchMedia('(max-width: 767px)').matches) return;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Wait for the expanding cover before centering it; never scroll the page vertically.
+    const timeout = window.setTimeout(() => {
+      const shelf = shelfRef.current;
+      const book = booksRef.current.get(activeProject.id);
+      if (!shelf || !book) return;
+      const bookBounds = book.getBoundingClientRect();
+      const shelfBounds = shelf.getBoundingClientRect();
+      shelf.scrollTo({
+        left: shelf.scrollLeft + bookBounds.left - shelfBounds.left - (shelf.clientWidth - bookBounds.width) / 2,
+        behavior: reducedMotion ? 'instant' : 'smooth',
+      });
+    }, reducedMotion ? 0 : 500);
+    return () => window.clearTimeout(timeout);
+  }, [activeProject?.id, filter]);
+
+  const changeFilter = (next: ProjectFilter) => {
+    setFilter(next);
+    if (!activeProject || !matchesFilter(activeProject, next)) {
+      setActiveId(projectsData.find(project => matchesFilter(project, next))?.id);
+    }
+  };
+
+  const moveSelection = (direction: number, focus = false) => {
+    if (!visibleProjects.length) return;
+    const next = visibleProjects[(activeIndex + direction + visibleProjects.length) % visibleProjects.length];
+    setActiveId(next.id);
+    if (focus) booksRef.current.get(next.id)?.focus({ preventScroll: true });
+  };
 
   return (
-    <div
-      id="projects"
-      className={`relative w-full transition-colors duration-300 ${
-        isDark ? 'bg-[#05070f]' : 'bg-[#f4f3f0]'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-12 sm:py-16 lg:py-20">
-
-        {/* Header */}
-        <div
-          className={`flex flex-col border-b pb-5 mb-8 sm:mb-12 ${
-            isDark ? 'border-slate-800/80' : 'border-black/[0.08]'
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <span
-              className={`font-mono-code text-[10px] sm:text-xs font-bold tracking-[0.2em] uppercase ${
-                isDark ? 'text-cyan-400' : 'text-[#ff5500]'
-              }`}
-            >
-              // 03. SELECTED WORKS
-            </span>
-            <span className={`h-[1px] w-8 ${isDark ? 'bg-cyan-500/40' : 'bg-orange-500/40'}`} />
-            <span
-              className={`text-[10px] sm:text-[11px] font-mono-code hidden sm:inline ${
-                isDark ? 'text-slate-500' : 'text-zinc-500'
-              }`}
-            >
-              PORTFOLIO GRID
-            </span>
+    <section id="projects" className={`project-library ${isDark ? 'project-library--dark' : ''}`} aria-labelledby="project-library-title">
+      <div className="project-library__inner">
+        <header className="project-library__header">
+          <div>
+            <p className="project-library__eyebrow">03 / SÉLECTION DE TRAVAUX</p>
+            <h2 id="project-library-title">Mes projets<span>.</span></h2>
           </div>
+          <p className="project-library__intro">Des idées devenues interfaces.<br />Une collection à explorer, projet par projet.</p>
+        </header>
 
-          <div className="flex flex-row items-end justify-between gap-4">
-            <div>
-              <h2
-                className={`font-syne text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight uppercase ${
-                  isDark ? 'text-white' : 'text-zinc-900'
-                }`}
-              >
-                GALERIE DE <span className={isDark ? 'text-cyan-400' : 'text-[#ff5500]'}>PROJETS</span>
-              </h2>
-              <p
-                className={`text-xs sm:text-sm mt-1 max-w-xl font-body ${
-                  isDark ? 'text-slate-400' : 'text-zinc-600'
-                }`}
-              >
-                Explorez les réalisations et case studies interactifs.
-              </p>
-            </div>
-
-            {/* Counter */}
-            <div
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl font-mono-code text-xs shadow-sm border shrink-0 ${
-                isDark
-                  ? 'bg-[#0c101d] border-slate-800 text-slate-300'
-                  : 'bg-white border-black/[0.06] text-zinc-700'
-              }`}
-            >
-              <Layers className={`w-3.5 h-3.5 ${isDark ? 'text-cyan-400' : 'text-[#ff5500]'}`} />
-              <span className="font-bold">{total}</span>
-              <span className="opacity-40">PROJETS</span>
-            </div>
+        <div className="project-library__toolbar">
+          <div className="project-library__filters" role="group" aria-label="Filtrer les projets">
+            {filters.map(item => (
+              <button key={item.id} type="button" aria-pressed={filter === item.id} onClick={() => changeFilter(item.id)}>
+                {item.label}<span>{projectsData.filter(project => matchesFilter(project, item.id)).length.toString().padStart(2, '0')}</span>
+              </button>
+            ))}
           </div>
+          <span className="project-library__edition">COLLECTION / {projectsData.length.toString().padStart(2, '0')} PROJETS</span>
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
-          {projectsData.map((project, index) => (
-            <div
-              key={project.id}
-              onClick={() => onSelectProject(project)}
-              className={`group relative rounded-2xl border overflow-hidden cursor-pointer select-none flex flex-col transition-all duration-300 ${
-                isDark
-                  ? 'bg-[#0c101d] border-slate-800/80 hover:border-cyan-500/60 hover:shadow-[0_20px_50px_rgba(0,242,254,0.12)]'
-                  : 'bg-white border-black/[0.08] hover:border-orange-500/40 hover:shadow-[0_20px_48px_rgba(255,85,0,0.12)]'
-              }`}
-            >
-              {/* Image */}
-              <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-950">
-                <img
-                  src={projectThumbnails[project.image]?.src ?? project.image}
-                  srcSet={projectThumbnails[project.image]?.srcSet}
-                  sizes="(min-width: 1280px) 374px, (min-width: 1024px) calc((100vw - 152px) / 3), (min-width: 768px) calc((100vw - 92px) / 2), (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
-                  loading="lazy"
-                  decoding="async"
-                  width={960}
-                  height={600}
-                  alt={project.title}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-                <div
-                  className={`absolute inset-0 ${
-                    isDark
-                      ? 'bg-gradient-to-t from-[#0c101d] via-transparent to-transparent'
-                      : 'bg-gradient-to-t from-black/40 via-transparent to-transparent'
-                  }`}
-                />
+        <p id="project-library-help" className="project-library__hint">
+          <span className="project-library__hint-desktop">Survolez une tranche, puis cliquez sur la couverture pour ouvrir le livre.</span>
+          <span className="project-library__hint-touch">Sélectionnez une tranche, puis touchez la couverture pour ouvrir le livre.</span>
+          <ArrowUpRight size={13} aria-hidden="true" />
+        </p>
 
-                {/* Badge numéro */}
-                <div className="absolute top-3 left-3 flex items-center gap-2 pointer-events-none">
-                  <span
-                    className={`font-mono-code text-[11px] sm:text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1.5 border shadow-md ${
-                      isDark
-                        ? 'text-cyan-300 bg-[#05070f]/85 border-cyan-500/40'
-                        : 'text-[#ff5500] bg-white/90 border-orange-500/40'
-                    }`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${isDark ? 'bg-cyan-400' : 'bg-[#ff5500]'}`} />
-                    0{project.number || index + 1}
-                  </span>
-                  <span
-                    className={`font-mono-code text-[10px] sm:text-[11px] px-2 py-0.5 rounded-md border ${
-                      isDark
-                        ? 'text-slate-300 bg-slate-900/85 border-slate-700'
-                        : 'text-zinc-700 bg-white/90 border-black/[0.08]'
-                    }`}
-                  >
-                    {project.year}
-                  </span>
-                </div>
+        <div className="project-library__shelf" ref={shelfRef}>
+          <div className="project-library__volumes" role="group" aria-label="Bibliothèque des projets" aria-describedby="project-library-help">
+            {visibleProjects.map(project => {
+              const index = projectsData.findIndex(item => item.id === project.id);
+              const active = activeProject?.id === project.id;
+              const number = (index + 1).toString().padStart(2, '0');
+              const thumbnail = projectThumbnails[project.image];
+              const bookStyle = {
+                '--book-color': bookColors[index % bookColors.length],
+                '--book-ink': index % bookColors.length === 2 ? '#302d26' : '#fff6e5',
+              } as React.CSSProperties;
 
-                {/* Catégorie */}
-                <div
-                  className={`absolute bottom-3 left-3 sm:left-4 font-mono-code text-[10px] sm:text-xs uppercase tracking-wider font-bold drop-shadow-md ${
-                    isDark ? 'text-cyan-400' : 'text-white'
-                  }`}
+              return (
+                <button
+                  key={project.id}
+                  ref={element => { if (element) booksRef.current.set(project.id, element); else booksRef.current.delete(project.id); }}
+                  type="button"
+                  className={`project-book ${active ? 'is-active' : ''}`}
+                  style={bookStyle}
+                  aria-label={`${active ? 'Ouvrir' : 'Sélectionner'} le projet ${project.title}`}
+                  aria-pressed={active}
+                  aria-controls={active ? 'project-detail-dialog' : 'project-library-detail'}
+                  aria-haspopup={active ? 'dialog' : undefined}
+                  onPointerEnter={event => { if (event.pointerType === 'mouse') setActiveId(project.id); }}
+                  onPointerDown={() => { pointerSelection.current = true; }}
+                  onPointerCancel={() => { pointerSelection.current = false; }}
+                  onFocus={() => { if (!pointerSelection.current) setActiveId(project.id); }}
+                  onBlur={() => { pointerSelection.current = false; }}
+                  onClick={() => {
+                    pointerSelection.current = false;
+                    if (active) onSelectProject(project);
+                    else setActiveId(project.id);
+                  }}
+                  onKeyDown={event => {
+                    pointerSelection.current = false;
+                    if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+                      event.preventDefault();
+                      moveSelection(event.key === 'ArrowRight' ? 1 : -1, true);
+                    }
+                    if (event.key === 'Home' || event.key === 'End') {
+                      event.preventDefault();
+                      const next = event.key === 'Home' ? visibleProjects[0] : visibleProjects[visibleProjects.length - 1];
+                      setActiveId(next.id);
+                      booksRef.current.get(next.id)?.focus({ preventScroll: true });
+                    }
+                  }}
                 >
-                  {project.category}
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className={`p-4 sm:p-5 flex flex-col justify-between flex-1 ${isDark ? 'bg-[#0c101d]' : 'bg-white'}`}>
-                <div>
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <h3
-                      className={`font-syne text-base sm:text-xl font-bold transition-colors ${
-                        isDark
-                          ? 'text-white group-hover:text-cyan-300'
-                          : 'text-zinc-900 group-hover:text-[#ff5500]'
-                      }`}
-                    >
-                      {project.title}
-                    </h3>
-                    <span
-                      className={`p-1 rounded-md transition-all shrink-0 border ${
-                        isDark
-                          ? 'bg-slate-900/80 border-slate-800 text-slate-400 group-hover:text-cyan-300 group-hover:border-cyan-500/50'
-                          : 'bg-zinc-100 border-black/[0.05] text-zinc-600 group-hover:text-[#ff5500] group-hover:border-orange-500/40'
-                      }`}
-                    >
-                      <ArrowUpRight className="w-3.5 h-3.5" />
+                  <span className="project-book__spine" aria-hidden="true">
+                    <span className="project-book__spine-number">{number}</span>
+                    <span className="project-book__spine-title">{project.title}</span>
+                    <span className="project-book__spine-footer">{project.year}<span>K/D</span></span>
+                  </span>
+                  <span className="project-book__cover" aria-hidden="true">
+                    <span className="project-book__cover-top"><span>KONEX DEV / {number}</span><ArrowUpRight size={15} /></span>
+                    <span className="project-book__title">{project.title}</span>
+                    <span className="project-book__category">{project.category.split(' • ')[1] ?? project.category}</span>
+                    <span className="project-book__artwork">
+                      <img src={thumbnail?.src ?? project.image} srcSet={thumbnail?.srcSet} sizes="(max-width: 767px) 225px, 290px" width={960} height={600} alt="" loading="lazy" decoding="async" />
                     </span>
-                  </div>
-
-                  <div
-                    className={`text-[11px] font-mono-code mb-2.5 ${
-                      isDark ? 'text-slate-400' : 'text-zinc-500'
-                    }`}
-                  >
-                    {project.subtitle}
-                  </div>
-
-                  <p
-                    className={`text-xs sm:text-sm leading-relaxed mb-3 line-clamp-3 ${
-                      isDark ? 'text-slate-300' : 'text-zinc-600'
-                    }`}
-                  >
-                    {project.description}
-                  </p>
-
-                  {/* Metrics */}
-                  <div
-                    className={`p-2 rounded-lg text-[11px] font-mono-code mb-3 flex items-center gap-2 border ${
-                      isDark
-                        ? 'bg-[#080d1a] border-cyan-500/25 text-cyan-300/95'
-                        : 'bg-orange-500/[0.04] border-orange-500/20 text-zinc-800'
-                    }`}
-                  >
-                    <span className="truncate font-semibold">{project.metrics}</span>
-                  </div>
-
-                  {/* Technologies */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {project.technologies.slice(0, 3).map((tech, idx) => (
-                      <span
-                        key={idx}
-                        className={`px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-mono-code ${
-                          isDark
-                            ? 'bg-slate-900 border border-slate-800 text-slate-300'
-                            : 'bg-zinc-100 border border-black/[0.05] text-zinc-700'
-                        }`}
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                    {project.technologies.length > 3 && (
-                      <span
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono-code border ${
-                          isDark
-                            ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30'
-                            : 'bg-orange-500/10 text-[#ff5500] border-orange-500/25'
-                        }`}
-                      >
-                        +{project.technologies.length - 3}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div
-                  className={`pt-3 mt-3 border-t flex items-center justify-between text-[11px] sm:text-xs font-mono-code ${
-                    isDark ? 'border-slate-800/80' : 'border-black/[0.06]'
-                  }`}
-                >
-                  <span
-                    className={`font-bold flex items-center gap-1.5 transition-colors ${
-                      isDark
-                        ? 'text-cyan-400 group-hover:text-cyan-300'
-                        : 'text-[#ff5500] group-hover:text-orange-600'
-                    }`}
-                  >
-                    <span>VOIR</span>
-                    <Eye className="w-3.5 h-3.5" />
+                    <span className="project-book__cover-bottom"><span>{project.year}<br />{project.category.includes('MOBILE') ? 'ÉDITION MOBILE' : 'ÉDITION WEB'}</span><span className="project-book__open">EXPLORER <ArrowUpRight size={12} /></span></span>
                   </span>
-
-                  <div className="flex items-center gap-2">
-                    {project.githubUrl && (
-                      <span
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(project.githubUrl, '_blank');
-                        }}
-                        className={`p-1.5 rounded-lg transition-colors ${
-                          isDark
-                            ? 'bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white'
-                            : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-zinc-900'
-                        }`}
-                        title="GitHub"
-                      >
-                        <Github className="w-3.5 h-3.5" />
-                      </span>
-                    )}
-                    {project.downloadUrl && (
-                      <span
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(project.downloadUrl, '_blank');
-                        }}
-                        className={`p-1.5 rounded-lg transition-colors ${
-                          isDark
-                            ? 'bg-cyan-500/15 text-cyan-400 hover:bg-cyan-500/25'
-                            : 'bg-orange-500/10 text-[#ff5500] hover:bg-orange-500/20'
-                        }`}
-                        title="Télécharger l'APK"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
+        {activeProject ? (
+          <div id="project-library-detail" className="project-library__detail">
+            <div className="project-library__pagination">
+              <button type="button" onClick={() => moveSelection(-1)} aria-label="Projet précédent" disabled={visibleProjects.length < 2}><ArrowLeft size={19} /></button>
+              <span aria-live="polite" aria-atomic="true"><b>{(activeIndex + 1).toString().padStart(2, '0')}</b> / {visibleProjects.length.toString().padStart(2, '0')}</span>
+              <button type="button" onClick={() => moveSelection(1)} aria-label="Projet suivant" disabled={visibleProjects.length < 2}><ArrowRight size={19} /></button>
+            </div>
+            <div className="project-library__selected" key={activeProject.id}>
+              <p className="project-library__selected-label">{activeProject.category} <span>/ {activeProject.year}</span></p>
+              <h3><button type="button" onClick={() => onSelectProject(activeProject)}>{activeProject.title}</button></h3>
+              <p className="project-library__description">{activeProject.description}</p>
+              <ul className="project-library__stack" aria-label="Technologies utilisées">{activeProject.technologies.map(tech => <li key={tech}>{tech}</li>)}</ul>
+            </div>
+            <div className="project-library__actions">
+              <button type="button" className="project-library__open" onClick={() => onSelectProject(activeProject)}>Découvrir le projet <ArrowUpRight size={17} /></button>
+              <div className="project-library__links">
+                {activeProject.githubUrl && <a href={activeProject.githubUrl} target="_blank" rel="noopener noreferrer"><Github size={14} /> Code source</a>}
+                {activeProject.downloadUrl && <a href={activeProject.downloadUrl} target="_blank" rel="noopener noreferrer"><Download size={14} /> Application</a>}
+                {activeProject.liveUrl && <a href={activeProject.liveUrl} target="_blank" rel="noopener noreferrer">Voir le site <ArrowUpRight size={14} /></a>}
+              </div>
+            </div>
+          </div>
+        ) : <p className="project-library__empty">Aucun projet dans cette catégorie.</p>}
+
+        <footer className="project-library__footer"><span>KONEX DEV — ARCHIVES CRÉATIVES</span><span>CONCEPTION & DÉVELOPPEMENT</span></footer>
       </div>
-    </div>
+    </section>
   );
 };

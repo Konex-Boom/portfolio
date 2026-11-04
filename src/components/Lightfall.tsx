@@ -249,11 +249,18 @@ export const Lightfall: React.FC<LightfallProps> = ({
     let frame = 0;
     let lastTime = 0;
     let sceneTime = 0;
+    let animateUntil = 0;
     let mouseTarget = [0, 0];
 
     const draw = (time: number) => {
       frame = 0;
       if (!active || optionsRef.current.paused || gl.isContextLost()) return;
+      // The decorative background rests between interactions. Limit work while
+      // the pointer moves too, especially on high-resolution screens.
+      if (lastTime && time - lastTime < 1000 / 24 && time < animateUntil) {
+        frame = requestAnimationFrame(draw);
+        return;
+      }
       const dt = lastTime ? Math.min((time - lastTime) / 1000, 0.05) : 0;
       lastTime = time;
       sceneTime += dt;
@@ -264,7 +271,7 @@ export const Lightfall: React.FC<LightfallProps> = ({
       current[0] += (mouseTarget[0] - current[0]) * factor;
       current[1] += (mouseTarget[1] - current[1]) * factor;
       renderer.render({ scene: mesh });
-      if (!reducedMotion.matches) frame = requestAnimationFrame(draw);
+      if (!reducedMotion.matches && time < animateUntil) frame = requestAnimationFrame(draw);
     };
     const sync = () => {
       if (frame) cancelAnimationFrame(frame);
@@ -274,7 +281,7 @@ export const Lightfall: React.FC<LightfallProps> = ({
     };
     const resize = () => {
       const rect = container.getBoundingClientRect();
-      const cap = mobile.matches ? 1 : 1.5;
+      const cap = Math.min(mobile.matches ? 1 : 1.5, Math.sqrt(180000 / Math.max(1, rect.width * rect.height)));
       renderer.dpr = Math.min(optionsRef.current.dpr ?? window.devicePixelRatio ?? 1, cap);
       renderer.setSize(rect.width, rect.height);
       uniforms.iResolution.value = [gl.drawingBufferWidth, gl.drawingBufferHeight, 1];
@@ -286,11 +293,18 @@ export const Lightfall: React.FC<LightfallProps> = ({
     resizeObserver.observe(container);
     resize();
     const onPointerMove = (event: PointerEvent) => {
-      if (!optionsRef.current.mouseInteraction || reducedMotion.matches) return;
+      if (!active || !optionsRef.current.mouseInteraction || reducedMotion.matches || event.pointerType === 'touch') return;
       const rect = canvas.getBoundingClientRect();
+      if (event.clientY < rect.top || event.clientY > rect.bottom || event.clientX < rect.left || event.clientX > rect.right) return;
       mouseTarget = [(event.clientX - rect.left) * renderer.dpr, (rect.height - event.clientY + rect.top) * renderer.dpr];
+      animateUntil = performance.now() + 600;
+      if (!frame) {
+        lastTime = 0;
+        frame = requestAnimationFrame(draw);
+      }
     };
-    canvas.addEventListener('pointermove', onPointerMove, { passive: true });
+    // The background is decorative (pointer-events: none); observe the window.
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
     reducedMotion.addEventListener('change', sync);
     mobile.addEventListener('change', resize);
     return () => {
@@ -300,7 +314,7 @@ export const Lightfall: React.FC<LightfallProps> = ({
       resizeObserver.disconnect();
       reducedMotion.removeEventListener('change', sync);
       mobile.removeEventListener('change', resize);
-      canvas.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointermove', onPointerMove);
       geometry.remove();
       program.remove();
       gl.getExtension('WEBGL_lose_context')?.loseContext();

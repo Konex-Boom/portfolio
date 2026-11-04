@@ -205,7 +205,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               stagger={360}
               pointerRepel={45}
               repelRadius={110}
-              idleDrift={0.6}
+              idleDrift={0}
               trigger="hover"
               fontSize="clamp(2.8rem, 6.2vw, 4.8rem)"
               fontWeight={900}
@@ -295,7 +295,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <div className="lg:col-span-4 flex flex-col items-center justify-center relative my-4 lg:my-0">
           
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={false}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.75, delay: 0.15 }}
             className="relative flex flex-col items-center"

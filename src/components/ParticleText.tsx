@@ -129,6 +129,10 @@ export const ParticleText: React.FC<ParticleTextProps> = ({
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return undefined;
+    // Compose the glow once for the entire title, not once per particle.
+    const layer = document.createElement('canvas');
+    const particleCtx = layer.getContext('2d');
+    if (!particleCtx) return undefined;
 
     let particles: Particle[] = [];
     let animationFrame: number | null = null;
@@ -182,22 +186,23 @@ export const ParticleText: React.FC<ParticleTextProps> = ({
 
     const drawParticle = (particle: Particle) => {
       const size = particle.size;
-      ctx.fillStyle = particle.color;
+      particleCtx.fillStyle = particle.color;
 
       if (size <= 2.1) {
-        ctx.fillRect(particle.x - size / 2, particle.y - size / 2, size, size);
+        particleCtx.fillRect(particle.x - size / 2, particle.y - size / 2, size, size);
         return;
       }
 
-      ctx.beginPath();
-      ctx.arc(particle.x, particle.y, size / 2, 0, Math.PI * 2);
-      ctx.fill();
+      particleCtx.beginPath();
+      particleCtx.arc(particle.x, particle.y, size / 2, 0, Math.PI * 2);
+      particleCtx.fill();
     };
 
     const render = (now: number) => {
       animationFrame = null;
       if (!active) return;
       ctx.clearRect(0, 0, width, height);
+      particleCtx.clearRect(0, 0, width, height);
 
       if (glow && !reducedMotion) {
         ctx.shadowBlur = particleSize * 3;
@@ -210,6 +215,7 @@ export const ParticleText: React.FC<ParticleTextProps> = ({
       pointer.smoothY += (pointer.y - pointer.smoothY) * 0.18;
 
       let complete = true;
+      let moving = false;
 
       particles.forEach((particle) => {
         let baseX = particle.targetX;
@@ -227,7 +233,7 @@ export const ParticleText: React.FC<ParticleTextProps> = ({
           baseY =
             particle.startY + (particle.targetY - particle.startY) * eased;
           if (progress < 1) complete = false;
-        } else if (!reducedMotion && idleDrift > 0) {
+        } else if (!reducedMotion && pointer.active && idleDrift > 0) {
           const driftTime = now * 0.001;
           baseX +=
             Math.sin(driftTime * 0.9 + particle.seed * 10) *
@@ -258,19 +264,23 @@ export const ParticleText: React.FC<ParticleTextProps> = ({
         const follow = reducedMotion ? 1 : 0.22;
         particle.x += (baseX - particle.x) * follow;
         particle.y += (baseY - particle.y) * follow;
+        if (Math.abs(baseX - particle.x) + Math.abs(baseY - particle.y) > 0.1) moving = true;
 
-        ctx.globalAlpha = clamp(0.35 + progress * 0.65, 0, 1);
+        particleCtx.globalAlpha = clamp(0.35 + progress * 0.65, 0, 1);
         drawParticle(particle);
       });
 
-      ctx.globalAlpha = 1;
+      particleCtx.globalAlpha = 1;
+      ctx.drawImage(layer, 0, 0, width, height);
       ctx.shadowBlur = 0;
 
       if (gathering && complete) {
         gathering = false;
       }
 
-      if (!reducedMotion) animationFrame = window.requestAnimationFrame(render);
+      if (!reducedMotion && (gathering || moving || (pointer.active && idleDrift > 0))) {
+        animationFrame = window.requestAnimationFrame(render);
+      }
     };
 
     const ensureRenderLoop = () => {
@@ -293,6 +303,9 @@ export const ParticleText: React.FC<ParticleTextProps> = ({
       canvas.style.width = '100%';
       canvas.style.height = '100%';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      layer.width = canvas.width;
+      layer.height = canvas.height;
+      particleCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       const computed = window.getComputedStyle(container);
       const resolvedFamily =
@@ -429,7 +442,7 @@ export const ParticleText: React.FC<ParticleTextProps> = ({
       pointer.smoothX = pointer.x;
       pointer.smoothY = pointer.y;
 
-      if (reducedMotion) {
+      if (reducedMotion || trigger !== 'mount') {
         particles.forEach((particle) => {
           particle.x = particle.targetX;
           particle.y = particle.targetY;
@@ -455,10 +468,12 @@ export const ParticleText: React.FC<ParticleTextProps> = ({
       pointer.x = event.clientX - rect.left;
       pointer.y = event.clientY - rect.top;
       pointer.active = true;
+      ensureRenderLoop();
     };
 
     const handlePointerLeave = () => {
       pointer.active = false;
+      ensureRenderLoop();
     };
 
     const handlePointerEnter = (event: PointerEvent) => {
@@ -468,6 +483,7 @@ export const ParticleText: React.FC<ParticleTextProps> = ({
 
     const handleClick = () => {
       if (trigger === 'click') startGather(true);
+      ensureRenderLoop();
     };
 
     const reduceMotionQuery = window.matchMedia?.(

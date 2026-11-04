@@ -1,318 +1,171 @@
-import React, { useState } from 'react';
-import { X, ExternalLink, Github, Sparkles, CheckCircle2, Download } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ArrowUpRight, Download, Github, X } from 'lucide-react';
+import { projectsData } from '../data/konexData';
+import { projectThumbnails } from '../data/projectThumbnails';
 import { ProjectItem } from '../types';
 import { useTheme } from '../context/ThemeContext';
+import './ProjectDetailModal.css';
 
 interface ProjectDetailModalProps {
   project: ProjectItem | null;
   onClose: () => void;
 }
 
-export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
-  project,
-  onClose,
-}) => {
+const coverColors = ['#913f2e', '#24546b', '#d5c8a9', '#284f43', '#b15b30', '#755267'];
+
+export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClose }) => {
   const { isDark } = useTheme();
   const [activeShot, setActiveShot] = useState(0);
+  const dialogRef = useRef<HTMLElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const mobileCloseRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    if (!project) return;
+    setActiveShot(0);
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const frame = window.requestAnimationFrame(() => {
+      (window.matchMedia('(max-width: 767px)').matches ? mobileCloseRef.current : closeRef.current)?.focus();
+    });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onCloseRef.current();
+      }
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), a[href]'))
+        .filter(element => element.getClientRects().length > 0);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !dialogRef.current.contains(document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus({ preventScroll: true });
+    };
+  }, [project?.id]);
 
   if (!project) return null;
 
-  const screenshots = project.screenshots && project.screenshots.length > 0 ? project.screenshots : [project.image];
+  const screenshots = project.screenshots?.length ? project.screenshots : [project.image];
+  const projectIndex = projectsData.findIndex(item => item.id === project.id);
+  const number = String(projectIndex + 1).padStart(2, '0');
+  const thumbnail = projectThumbnails[project.image];
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-md overflow-y-auto"
-      onClick={onClose}
-    >
-      <div
-        className={`relative w-full max-w-4xl rounded-2xl border overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200 ${
-          isDark
-            ? 'bg-[#0c101d] border-slate-700/80 shadow-[0_20px_60px_rgba(0,0,0,0.8)]'
-            : 'bg-white border-black/[0.08] shadow-[0_24px_60px_rgba(0,0,0,0.15)]'
-        }`}
-        onClick={(e) => e.stopPropagation()}
+    <div className="project-reading-overlay" onMouseDown={event => {
+      if (event.target === event.currentTarget) onClose();
+    }}>
+      <section
+        id="project-detail-dialog"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="project-reading-title"
+        className={'project-reading-book' + (isDark ? ' project-reading-book--dark' : '')}
       >
-        {/* Header Bar */}
-        <div
-          className={`flex items-center justify-between p-4 sm:p-6 border-b ${
-            isDark
-              ? 'border-slate-800 bg-[#080c16]'
-              : 'border-black/[0.06] bg-[#f8f7f4]'
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            <span
-              className={`font-mono-code text-xs font-bold px-2.5 py-1 rounded border ${
-                isDark
-                  ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
-                  : 'bg-orange-500/10 text-[#ff5500] border-orange-500/25'
-              }`}
-            >
-              CASE STUDY // {project.number}
-            </span>
-            <span
-              className={`text-xs font-mono-code ${
-                isDark ? 'text-slate-400' : 'text-zinc-500 font-medium'
-              }`}
-            >
-              {project.category}
-            </span>
+        <button ref={mobileCloseRef} type="button" className="project-reading-close project-reading-mobile-close" aria-label="Fermer le projet" onClick={onClose}>
+          <X size={19} aria-hidden="true" />
+        </button>
+        <div className="project-reading-page project-reading-page--visual">
+          <div className="project-reading-page__meta">
+            <span>KONEX DEV / {number}</span>
+            <span>{project.category}</span>
           </div>
-
-          <button
-            onClick={onClose}
-            className={`p-2 rounded-lg border transition-colors cursor-pointer ${
-              isDark
-                ? 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
-                : 'bg-zinc-100 border-black/[0.06] text-zinc-500 hover:text-zinc-900'
-            }`}
-            aria-label="Fermer la modal"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Modal Body */}
-        <div className="p-6 sm:p-8 space-y-6 max-h-[80vh] overflow-y-auto">
-          
-          {/* Main Image */}
-          <div
-            className={`relative aspect-[16/9] w-full rounded-xl overflow-hidden border ${
-              isDark ? 'border-slate-800 bg-slate-950' : 'border-black/[0.08] bg-zinc-100'
-            }`}
-          >
-            <img
-              src={screenshots[activeShot]}
-              alt={`${project.title} — Capture ${activeShot + 1}`}
-              referrerPolicy="no-referrer"
-              className="w-full h-full object-cover"
-            />
-            <div
-              className={`absolute inset-0 bg-gradient-to-t via-transparent to-transparent opacity-60 ${
-                isDark ? 'from-[#0c101d]' : 'from-black/40'
-              }`}
-            />
+          <div className="project-reading-image">
+            <img src={screenshots[activeShot]} alt={project.title + ' — capture ' + (activeShot + 1)} decoding="async" />
           </div>
-
-          {/* Screenshot Gallery */}
           {screenshots.length > 1 && (
-            <div className="flex flex-wrap gap-2">
-              {screenshots.map((shot, i) => (
+            <div className="project-reading-gallery" aria-label="Captures du projet">
+              {screenshots.map((shot, index) => (
                 <button
-                  key={i}
-                  onClick={() => setActiveShot(i)}
-                  className={`relative w-28 h-16 rounded-lg overflow-hidden border transition-all cursor-pointer ${
-                    i === activeShot
-                      ? isDark
-                        ? 'border-cyan-400 ring-2 ring-cyan-400/50'
-                        : 'border-[#ff5500] ring-2 ring-orange-500/50'
-                      : isDark
-                        ? 'border-slate-800 opacity-60 hover:opacity-100'
-                        : 'border-black/[0.08] opacity-60 hover:opacity-100'
-                  }`}
-                  aria-label={`Voir la capture ${i + 1}`}
+                  key={shot}
+                  type="button"
+                  aria-label={'Voir la capture ' + (index + 1)}
+                  aria-pressed={activeShot === index}
+                  onClick={() => setActiveShot(index)}
                 >
-                  <img
-                    src={shot}
-                    alt={`${project.title} — capture ${i + 1}`}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={shot} alt="" loading="lazy" decoding="async" />
                 </button>
               ))}
             </div>
           )}
-
-          {/* Title & Actions */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h2
-                className={`font-syne text-2xl sm:text-3xl font-extrabold ${
-                  isDark ? 'text-white' : 'text-zinc-900'
-                }`}
-              >
-                {project.title}
-              </h2>
-              <p
-                className={`font-mono-code text-xs sm:text-sm mt-1 font-semibold ${
-                  isDark ? 'text-cyan-400' : 'text-[#ff5500]'
-                }`}
-              >
-                {project.subtitle}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {project.githubUrl && (
-                <a
-                  href={project.githubUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`px-4 py-2 rounded-xl border text-xs font-mono-code flex items-center gap-2 transition-all ${
-                    isDark
-                      ? 'bg-slate-900 border-slate-800 text-slate-200 hover:text-white hover:border-cyan-500/50'
-                      : 'bg-zinc-100 border-black/[0.08] text-zinc-700 hover:text-zinc-950 hover:border-black/20'
-                  }`}
-                >
-                  <Github className="w-4 h-4" />
-                  <span>Dépôt GitHub</span>
-                </a>
-              )}
-
-              {project.liveUrl && (
-                <a
-                  href={project.liveUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`px-4 py-2 rounded-xl font-bold text-xs font-mono-code flex items-center gap-1.5 transition-all ${
-                    isDark
-                      ? 'bg-cyan-500 text-slate-950 hover:bg-cyan-400 shadow-[0_0_15px_rgba(0,242,254,0.3)]'
-                      : 'bg-[#ff5500] text-white hover:bg-orange-600 shadow-[0_4px_14px_rgba(255,85,0,0.35)]'
-                  }`}
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  <span>Démo Live</span>
-                </a>
-              )}
-
-              {project.downloadUrl && (
-                <a
-                  href={project.downloadUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`px-4 py-2 rounded-xl font-bold text-xs font-mono-code flex items-center gap-1.5 transition-all ${
-                    isDark
-                      ? 'bg-cyan-500 text-slate-950 hover:bg-cyan-400 shadow-[0_0_15px_rgba(0,242,254,0.3)]'
-                      : 'bg-[#ff5500] text-white hover:bg-orange-600 shadow-[0_4px_14px_rgba(255,85,0,0.35)]'
-                  }`}
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Télécharger</span>
-                </a>
-              )}
-            </div>
-          </div>
-
-          {/* Performance Highlight */}
-          <div
-            className={`p-4 rounded-xl border flex items-center gap-3 ${
-              isDark
-                ? 'bg-[#080d1a] border-cyan-500/30'
-                : 'bg-orange-500/[0.06] border-orange-500/20'
-            }`}
-          >
-            <Sparkles
-              className={`w-5 h-5 shrink-0 ${
-                isDark ? 'text-cyan-400' : 'text-[#ff5500]'
-              }`}
-            />
-            <div
-              className={`text-xs font-mono-code ${
-                isDark ? 'text-cyan-300' : 'text-zinc-800'
-              }`}
-            >
-              <strong className={isDark ? 'text-cyan-400' : 'text-[#ff5500]'}>
-                Métrique Clé :{' '}
-              </strong>
-              {project.metrics}
-            </div>
-          </div>
-
-          {/* Technologies used */}
-          <div>
-            <span
-              className={`text-xs font-mono-code uppercase block mb-2 font-semibold ${
-                isDark ? 'text-slate-400' : 'text-zinc-600'
-              }`}
-            >
-              STACK TECHNIQUE UTILISÉE :
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {project.technologies.map((t, i) => (
-                <span
-                  key={i}
-                  className={`px-3 py-1 rounded-lg text-xs font-mono-code border ${
-                    isDark
-                      ? 'bg-slate-900 border-slate-800 text-slate-300'
-                      : 'bg-zinc-100 border-black/[0.06] text-zinc-700 font-medium'
-                  }`}
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Architecture & Features */}
-          <div
-            className={`grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t ${
-              isDark ? 'border-slate-800' : 'border-black/[0.08]'
-            }`}
-          >
-            <div className="space-y-3">
-              <h4
-                className={`text-xs font-mono-code uppercase font-bold ${
-                  isDark ? 'text-cyan-400' : 'text-[#ff5500]'
-                }`}
-              >
-                // VUE D'ENSEMBLE DU PROJET
-              </h4>
-              <p
-                className={`text-xs sm:text-sm leading-relaxed ${
-                  isDark ? 'text-slate-300' : 'text-zinc-600'
-                }`}
-              >
-                {project.caseStudy.overview}
-              </p>
-              <div
-                className={`p-3 rounded-lg border text-xs ${
-                  isDark
-                    ? 'bg-slate-900/60 border-slate-800 text-slate-400'
-                    : 'bg-zinc-50 border-black/[0.06] text-zinc-600'
-                }`}
-              >
-                <strong
-                  className={`block mb-1 ${
-                    isDark ? 'text-slate-200' : 'text-zinc-900'
-                  }`}
-                >
-                  Architecture :
-                </strong>
-                {project.caseStudy.architecture}
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <h4
-                className={`text-xs font-mono-code uppercase font-bold ${
-                  isDark ? 'text-purple-400' : 'text-orange-600'
-                }`}
-              >
-                // FONCTIONNALITÉS CLÉS
-              </h4>
-              <div className="space-y-2">
-                {project.caseStudy.keyFeatures.map((feat, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex items-start gap-2 text-xs ${
-                      isDark ? 'text-slate-300' : 'text-zinc-700'
-                    }`}
-                  >
-                    <CheckCircle2
-                      className={`w-4 h-4 shrink-0 mt-0.5 ${
-                        isDark ? 'text-purple-400' : 'text-[#ff5500]'
-                      }`}
-                    />
-                    <span>{feat}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
+          <p className="project-reading-page__folio">PORTFOLIO / {number} <span>{String(activeShot + 1).padStart(2, '0')} / {String(screenshots.length).padStart(2, '0')}</span></p>
         </div>
 
-      </div>
+        <div className="project-reading-page project-reading-page--story">
+          <div className="project-reading-page__top">
+            <span>ÉTUDE DE PROJET / {number}</span>
+            <button ref={closeRef} type="button" className="project-reading-close" aria-label="Fermer le projet" onClick={onClose}>
+              <X size={19} aria-hidden="true" />
+            </button>
+          </div>
+          <h2 id="project-reading-title">{project.title}</h2>
+          <p className="project-reading-subtitle">{project.subtitle}</p>
+          <p className="project-reading-intro">{project.description}</p>
+
+          <div className="project-reading-highlight">
+            <span>POINTS FORTS</span>
+            <strong>{project.metrics}</strong>
+          </div>
+          <div className="project-reading-block">
+            <h3>Le projet</h3>
+            <p>{project.caseStudy.overview}</p>
+          </div>
+          <div className="project-reading-block">
+            <h3>Architecture</h3>
+            <p>{project.caseStudy.architecture}</p>
+          </div>
+          <div className="project-reading-block">
+            <h3>Fonctionnalités</h3>
+            <ul>{project.caseStudy.keyFeatures.map(feature => <li key={feature}>{feature}</li>)}</ul>
+          </div>
+          <div className="project-reading-block">
+            <h3>Résultats</h3>
+            <ul>{project.caseStudy.results.map(result => <li key={result}>{result}</li>)}</ul>
+          </div>
+          <div className="project-reading-block">
+            <h3>Technologies</h3>
+            <div className="project-reading-tech">{project.technologies.map(tech => <span key={tech}>{tech}</span>)}</div>
+          </div>
+          {(project.githubUrl || project.liveUrl || project.downloadUrl) && (
+            <div className="project-reading-links">
+              {project.githubUrl && <a href={project.githubUrl} target="_blank" rel="noopener noreferrer"><Github size={16} /> Code source</a>}
+              {project.liveUrl && <a href={project.liveUrl} target="_blank" rel="noopener noreferrer">Voir le site <ArrowUpRight size={16} /></a>}
+              {project.downloadUrl && <a href={project.downloadUrl} target="_blank" rel="noopener noreferrer"><Download size={16} /> Application</a>}
+            </div>
+          )}
+          <p className="project-reading-page__end">KONEX DEV — CONCEPTION & DÉVELOPPEMENT</p>
+        </div>
+
+        <div
+          key={project.id}
+          className="project-reading-cover"
+          style={{ backgroundColor: coverColors[projectIndex] ?? coverColors[0], color: projectIndex === 2 ? '#302d26' : '#fff6e5' }}
+          aria-hidden="true"
+        >
+          <span>KONEX DEV / {number}</span>
+          <strong>{project.title}</strong>
+          <img src={thumbnail?.src ?? project.image} alt="" decoding="async" />
+          <small>{project.category}</small>
+        </div>
+      </section>
     </div>
   );
 };

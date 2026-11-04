@@ -98,6 +98,10 @@ try {
     assert(!initial.resources.some(r => /ModelViewer|three.*\.js|model\.glb/.test(r.name)), `${name}: 3D must remain deferred`);
     assert(!initial.resources.some(r => /(?:cap1|dashboard|cover).*\.(?:png|jpg)/.test(r.name)), `${name}: full project covers must remain deferred`);
     assert(initial.canvasWidth / initial.cssWidth <= (mobile ? 1.01 : 1.51), `${name}: background resolution is capped`);
+    const idleBefore = await counters(page);
+    await page.waitForTimeout(1200);
+    const idleAfter = await counters(page);
+    assert.deepEqual(idleAfter, idleBefore, `${name}: the visible hero does not draw continuously while idle`);
     await page.screenshot({ path: join(artifacts, `${name}-hero.png`) });
     console.log(`${name}: startup passed; checking scrolling and 3D`);
 
@@ -122,11 +126,18 @@ try {
     assert.equal(offscreenAfter.particleFrames, offscreenBefore.particleFrames, `${name}: particles stop outside the viewport`);
 
     await move(page, 'hero');
+    if (mobile) await page.locator('.particle-text canvas').dispatchEvent('pointerenter', { pointerType: 'touch', clientX: 180, clientY: 200 });
+    else await page.locator('.particle-text canvas').hover();
     const resumedBefore = await counters(page);
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(300);
     const resumed = await counters(page);
-    assert(resumed.glDraws > resumedBefore.glDraws, `${name}: background resumes`);
+    if (!mobile) assert(resumed.glDraws > resumedBefore.glDraws, `${name}: background responds to the pointer`);
     assert(resumed.particleFrames > resumedBefore.particleFrames, `${name}: particles resume`);
+    await page.locator('.particle-text canvas').dispatchEvent('pointerleave');
+    await page.waitForTimeout(3000);
+    const settled = await counters(page);
+    await page.waitForTimeout(700);
+    assert.deepEqual(await counters(page), settled, `${name}: interactive effects settle back to rest`);
     await page.locator('button[aria-label="Toggle theme"]:visible').first().click();
     await page.waitForTimeout(700);
     assert.equal((await counters(page)).contexts, 2, `${name}: theme updates preserve the WebGL contexts`);
@@ -168,7 +179,7 @@ try {
     await page.waitForTimeout(300);
     assert((await counters(page)).glDraws > reducedBefore.glDraws, `${name}: animations resume after preference changes`);
     assert.deepEqual(errors, [], `${name}: no runtime or WebGL saturation errors`);
-    const result = { device: name, initialBytes: initial.resources.reduce((n, r) => n + r.bytes, 0), initialContexts: initial.counts.contexts, contextsAfterNavigation: resumed.contexts, offscreenWebGLDraws: offscreenAfter.glDraws - offscreenBefore.glDraws, offscreenParticleFrames: offscreenAfter.particleFrames - offscreenBefore.particleFrames, errors };
+    const result = { device: name, initialBytes: initial.resources.reduce((n, r) => n + r.bytes, 0), initialContexts: initial.counts.contexts, contextsAfterNavigation: resumed.contexts, idleWebGLDraws: idleAfter.glDraws - idleBefore.glDraws, idleParticleFrames: idleAfter.particleFrames - idleBefore.particleFrames, offscreenWebGLDraws: offscreenAfter.glDraws - offscreenBefore.glDraws, offscreenParticleFrames: offscreenAfter.particleFrames - offscreenBefore.particleFrames, errors };
     results.push(result);
     console.log(JSON.stringify(result));
     await context.close();

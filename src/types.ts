@@ -4,8 +4,7 @@ export interface TechSkill {
   category: 'frontend' | 'backend' | 'database' | 'languages' | 'tools';
   level: string;
   experienceYears: string;
-  icon: string;
-  logoUrl?: string;
+  logoUrl: string;
   color: string;
   description: string;
 }
