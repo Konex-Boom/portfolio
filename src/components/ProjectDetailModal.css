@@ -339,3 +339,62 @@
   .project-reading-image, .project-reading-image img { animation: none !important; }
   .project-reading-gallery button, .project-reading-links a, .project-reading-close { transition: none !important; }
 }
+
+
+/* Keep portrait phone screenshots fully visible within the open book. */
+.project-reading-page--visual { min-width: 0; min-height: 0; }
+.project-reading-image {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  flex: 1 1 auto;
+  height: 100%;
+}
+.project-reading-image img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
+  object-fit: contain;
+}
+@media (min-width: 768px) {
+  .project-reading-page--visual { overflow: hidden; }
+  .project-reading-image { margin: 16px 0; }
+  .project-reading-image img { max-height: min(480px, calc(100dvh - 230px)); }
+  .project-reading-gallery { max-width: 100%; }
+}
+@media (max-width: 767px) {
+  .project-reading-book { overflow-x: hidden; }
+  .project-reading-page--visual {
+    display: flex;
+    min-height: 0;
+    overflow: visible;
+    padding: 58px clamp(12px, 4vw, 22px) 18px;
+  }
+  .project-reading-image {
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    margin: 16px 0;
+    padding: 12px;
+    overflow: visible;
+  }
+  .project-reading-image img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: min(65dvh, 640px);
+    margin-inline: auto;
+    object-fit: contain;
+  }
+  .project-reading-gallery { width: 100%; max-width: 100%; }
+  .project-reading-page--story { overflow-wrap: anywhere; }
+}
+@media (max-width: 380px) {
+  .project-reading-image { padding: 8px; }
+  .project-reading-image img { max-height: 58dvh; }
+}
