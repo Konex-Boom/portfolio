@@ -32,7 +32,7 @@ export const ProjectsHorizontalSection: React.FC<ProjectsHorizontalSectionProps>
   const activeIndex = visibleProjects.findIndex(project => project.id === activeProject?.id);
 
   useEffect(() => {
-    if (!activeProject || !window.matchMedia('(max-width: 767px)').matches) return;
+    if (!activeProject || !window.matchMedia('(min-width: 768px) and (max-width: 1023px)').matches) return;
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     // Wait for the expanding cover before centering it; never scroll the page vertically.
     const timeout = window.setTimeout(() => {
@@ -121,7 +121,10 @@ export const ProjectsHorizontalSection: React.FC<ProjectsHorizontalSectionProps>
                   onBlur={() => { pointerSelection.current = false; }}
                   onClick={() => {
                     pointerSelection.current = false;
-                    if (active) onSelectProject(project);
+                    if (window.matchMedia('(max-width: 767px)').matches) {
+                      setActiveId(project.id);
+                      onSelectProject(project);
+                    } else if (active) onSelectProject(project);
                     else setActiveId(project.id);
                   }}
                   onKeyDown={event => {
