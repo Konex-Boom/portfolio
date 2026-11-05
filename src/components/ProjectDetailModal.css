@@ -398,3 +398,33 @@
   .project-reading-image { padding: 8px; }
   .project-reading-image img { max-height: 58dvh; }
 }
+
+
+/* Unified physical page-turn animation on desktop and mobile. */
+.project-reading-book { perspective: 1600px; }
+.project-reading-cover {
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+  animation: project-book-cover-turn 1.05s cubic-bezier(.22,.72,.2,1) both;
+}
+@keyframes project-book-cover-turn {
+  0% { opacity: 1; transform: rotateY(0deg); visibility: visible; }
+  65% { opacity: 1; transform: rotateY(-105deg); visibility: visible; }
+  99% { opacity: 0; transform: rotateY(-175deg); visibility: visible; }
+  100% { opacity: 0; transform: rotateY(-175deg); visibility: hidden; }
+}
+@media (max-width: 767px) {
+  .project-reading-book { overflow-x: clip; perspective: 1200px; }
+  .project-reading-cover {
+    inset: 0 0 auto 0;
+    height: 330px;
+    transform-origin: left center;
+    animation: project-book-cover-turn 1.05s cubic-bezier(.22,.72,.2,1) both;
+  }
+  .project-reading-page--visual { animation-delay: .25s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .project-reading-cover { display: none; animation: none; }
+}
