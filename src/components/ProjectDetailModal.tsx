@@ -88,7 +88,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project,
             <span>KONEX DEV / {number}</span>
             <span>{project.category}</span>
           </div>
-          <div className="project-reading-image">
+          <div className="project-reading-image" key={`${project.id}-${activeShot}`}>
             <img src={screenshots[activeShot]} alt={project.title + ' — capture ' + (activeShot + 1)} decoding="async" />
           </div>
           {screenshots.length > 1 && (
